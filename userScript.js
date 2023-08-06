@@ -16,7 +16,7 @@
 const imax = {
     css: {
         jable: "div.asg-interstitial,div.asg-interstitial__mask,iframe,div[class*=\"exo\"], .exo-native-widget-outer-container,a[target*=\"_blank\"],a[href*=\"trwl1\"],div[data-width=\"300\"],div.text-center.mb-e-30,div[data-width*=\"300\"],div[style*=\"300px\"],section[class*=\"justify\"],iframe[width=\"728\"][height=\"90\"],#site-content > div.container > section.pb-3.pb-e-lg-40.text-center,.text-center > a[target=\"_blank\"] > img,a[href*=\"\?banner=\"],[class*=\"root--\"],.badge,a[href=\"http\:\/\/uus52\.com/\"] {display :none !important; pointer-events: none !important;}", // Jable.tv
-        missav: "img[src*='.gif'], iframe,#a[href*='//bit.ly/'],div[style*='z-index: 1001'],ul.space-y-2.mb-4.ml-4.list-disc.text-nord14,div.space-y-5.mb-5,div.under_player,div[style=\"width: 300px; height: 250px;\"] {display:none !important; pointer-events:none important;}", //  MissAV
+        missav: "a[href*='/vip'], img[src*='.gif'], iframe,#a[href*='//bit.ly/'],div[style*='z-index: 1001'],ul.space-y-2.mb-4.ml-4.list-disc.text-nord14,div.space-y-5.mb-5,div.under_player,div[style=\"width: 300px; height: 250px;\"] {display:none !important; pointer-events:none important;}", //  MissAV
         porn91: "img[class*=\"ad_img\"], iframe[src*=\"ads\"], img[href*='.gif'] {display:none ! important; pointer-events: none !important;}", // 91porn
         pornhubx: "#header.hasAdAlert {grid-template-rows:60px 40px 0px !important} div.hd.clear, div > img[data-title][srcset], #js-networkBar,div#abAlert, .adsbytrafficjunky, #pb_template, .sponsor-text, #adsbox, .abAlertShown, .abAlertInner, #main-container > .abovePlayer, [rel*='noopener nofollow'],a[href^=\"http://ads.trafficjunky.net/\"], .topAdContainter,.adsbytrafficjunky,.ad-link,a[target='_blank'] {height:0px !important; display:none !important; pointer-events:none;}" // pornhub
     }
@@ -51,6 +51,7 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
             pornhub_sidebar_ads();
             break;
         case 'missav':
+            window_open_defuser(); // 打断 window.open 施法
             cloudflare_captchaBypass();
             css_adsRemove(imax.css.missav);
             //missAv_adsRemove();
@@ -188,3 +189,98 @@ function jable_adsRemove() { // Cookie 设定及注入
 function missAv_adsRemove() {
     document.cookie = "_gat_UA-177787578-7; expires=Thu, 01 Jan 1970 00:00:00 GMT";
 }
+
+function window_open_defuser() {
+    'use strict';
+    let arg1 = '{{1}}';
+    if (arg1 === '{{1}}') { arg1 = ''; }
+    let arg2 = '{{2}}';
+    if (arg2 === '{{2}}') { arg2 = ''; }
+    let arg3 = '{{3}}';
+    if (arg3 === '{{3}}') { arg3 = ''; }
+    const log = /\blog\b/.test(arg3)
+        ? console.log.bind(console)
+        : () => { };
+    const newSyntax = /^[01]?$/.test(arg1) === false;
+    let pattern = '';
+    let targetResult = true;
+    let autoRemoveAfter = -1;
+    if (newSyntax) {
+        pattern = arg1;
+        if (pattern.startsWith('!')) {
+            targetResult = false;
+            pattern = pattern.slice(1);
+        }
+        autoRemoveAfter = parseInt(arg2);
+        if (isNaN(autoRemoveAfter)) {
+            autoRemoveAfter = -1;
+        }
+    } else {
+        pattern = arg2;
+        if (arg1 === '0') {
+            targetResult = false;
+        }
+    }
+    if (pattern === '') {
+        pattern = '.?';
+    } else if (/^\/.+\/$/.test(pattern)) {
+        pattern = pattern.slice(1, -1);
+    } else {
+        pattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+    const rePattern = new RegExp(pattern);
+    const createDecoy = function (tag, urlProp, url) {
+        const decoy = document.createElement(tag);
+        decoy[urlProp] = url;
+        decoy.style.setProperty('height', '1px', 'important');
+        decoy.style.setProperty('position', 'fixed', 'important');
+        decoy.style.setProperty('top', '-1px', 'important');
+        decoy.style.setProperty('width', '1px', 'important');
+        document.body.appendChild(decoy);
+        setTimeout(() => decoy.remove(), autoRemoveAfter * 1000);
+        return decoy;
+    };
+    window.open = new Proxy(window.open, {
+        apply: function (target, thisArg, args) {
+            log('window.open:', ...args);
+            const url = args[0];
+            if (rePattern.test(url) !== targetResult) {
+                return target.apply(thisArg, args);
+            }
+            if (autoRemoveAfter < 0) { return null; }
+            const decoy = /\bobj\b/.test(arg3)
+                ? createDecoy('object', 'data', url)
+                : createDecoy('iframe', 'src', url);
+            let popup = decoy.contentWindow;
+            if (typeof popup === 'object' && popup !== null) {
+                Object.defineProperty(popup, 'closed', { value: false });
+            } else {
+                const noopFunc = (function () { }).bind(self);
+                popup = new Proxy(self, {
+                    get: function (target, prop) {
+                        if (prop === 'closed') { return false; }
+                        const r = Reflect.get(...arguments);
+                        if (typeof r === 'function') { return noopFunc; }
+                        return target[prop];
+                    },
+                    set: function () {
+                        return Reflect.set(...arguments);
+                    },
+                });
+            }
+            if (/\blog\b/.test(arg3)) {
+                popup = new Proxy(popup, {
+                    get: function (target, prop) {
+                        log('window.open / get', prop, '===', target[prop]);
+                        return Reflect.get(...arguments);
+                    },
+                    set: function (target, prop, value) {
+                        log('window.open / set', prop, '=', value);
+                        return Reflect.set(...arguments);
+                    },
+                });
+            }
+            return popup;
+        }
+    });
+};
