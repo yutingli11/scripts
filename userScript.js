@@ -5,7 +5,7 @@
 // @description Remove Ads
 // @author      limbopro
 // @license     BSD-3-Clause
-// @match       https://missav.com/*
+// @match       https://missav.ws/*
 // @match       https://91porn.com/*
 // @match       https://jable.tv/*
 // @match       https://*.pornhub.com/*
