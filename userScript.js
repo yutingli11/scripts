@@ -309,16 +309,6 @@ function ele_dynamicAppend(selector, attribute, txt, style, func, id, array, tag
     }
 }
 
-/* 添加监听器 byID */
-function addListenerById(id, funx, time) {
-    setTimeout(() => {
-        if (document.getElementById(id) !== null) {
-            var eleById = document.getElementById(id);
-            eleById.addEventListener("click", funx, false)
-        }
-    }, time)
-}
-
 function pornhub_interstitialPass() {
     const ele_skip = "[onclick*='clearModalCookie']"
     const exist = document.querySelectorAll(ele_skip);
@@ -448,6 +438,61 @@ function missAv_playbutton() {
         //ele_catch[1].play();
         //console.log("视频已开启循环播放；")
     }
+}
+
+/* 播放 */
+function video_Play() {
+    //setInterval(function () {
+    var ele = ["video[preload='none'],video#player"];
+    var ele_catch = document.querySelectorAll(ele);
+    if (ele_catch.length > 0) {
+        ele_catch[0].play();
+        ele_catch[1].play();
+        console.log("视频已开始播放；")
+    }
+    //}, 1000)
+}
+
+/* 全屏 */
+function fullscreen() {
+    const fullScreen = document.querySelector('button[data-plyr=\'fullscreen\']');
+    fullScreen.click()
+    //fullScreen.requestFullscreen();
+    //const fullScreen = document.querySelector('div.plyr__video-wrapper');
+    //fullScreen.requestFullscreen();
+}
+
+/* 暂停 */
+function video_pause() {
+    //setInterval(function () {
+    var ele = ["video[preload='none'],video#player"];
+    var ele_catch = document.querySelectorAll(ele);
+    if (ele_catch.length > 0) {
+        ele_catch[0].pause();
+        ele_catch[1].pause();
+        console.log("视频已暂停；")
+    }
+    //}, 1000)
+}
+
+/* 添加监听器 bySelector*/
+function addListener(selector, funx) {
+    setTimeout(() => {
+        var ele = document.querySelectorAll(selector);
+        for (let index = 0; index < ele.length; index++) {
+            ele[index].addEventListener("click", funx, false)
+        }
+    }, 1000)
+}
+
+/* 添加监听器 byID */
+function addListenerById(id, funx, time) {
+    setTimeout(() => {
+        if (document.getElementById(id) !== null) {
+            var eleById = document.getElementById(id);
+            eleById.addEventListener("click", funx, false)
+        }
+    }, time)
 }
 
 function window_open_defuser() {
@@ -612,4 +657,106 @@ function _91porn_dl() { // 下载视频
             document.querySelectorAll('#useraction')[0].parentNode.insertBefore(mp4Download, document.querySelectorAll('#useraction')[0])
         }
     }
+}
+
+/// abort-on-property-read.js
+/// alias aopr.js
+/// https://github.com/gorhill/uBlock/blob/a94df7f3b27080ae2dcb3b914ace39c0c294d2f6/assets/resources/scriptlets.js#L96
+function abort_on_property_read() {
+    const magic = String.fromCharCode(Date.now() % 26 + 97) +
+        Math.floor(Math.random() * 982451653 + 982451653).toString(36);
+    const abort = function () {
+        throw new ReferenceError(magic);
+    };
+    const makeProxy = function (owner, chain) {
+        const pos = chain.indexOf('.');
+        if (pos === -1) {
+            const desc = Object.getOwnPropertyDescriptor(owner, chain);
+            if (!desc || desc.get !== abort) {
+                Object.defineProperty(owner, chain, {
+                    get: abort,
+                    set: function () { }
+                });
+            }
+            return;
+        }
+        const prop = chain.slice(0, pos);
+        let v = owner[prop];
+        chain = chain.slice(pos + 1);
+        if (v) {
+            makeProxy(v, chain);
+            return;
+        }
+        const desc = Object.getOwnPropertyDescriptor(owner, prop);
+        if (desc && desc.set !== undefined) { return; }
+        Object.defineProperty(owner, prop, {
+            get: function () { return v; },
+            set: function (a) {
+                v = a;
+                if (a instanceof Object) {
+                    makeProxy(a, chain);
+                }
+            }
+        });
+    };
+    const owner = window;
+    let chain = '{{1}}';
+    makeProxy(owner, chain);
+    const oe = window.onerror;
+    window.onerror = function (msg, src, line, col, error) {
+        if (typeof msg === 'string' && msg.indexOf(magic) !== -1) {
+            return true;
+        }
+        if (oe instanceof Function) {
+            return oe(msg, src, line, col, error);
+        }
+    }.bind();
+};
+
+// 在番号详情页追加在线预览链接
+function tmd(parentsSelector, code, textContent) {
+
+    function otherSearch() {
+        // 试试其他搜索：
+
+        let parentElement = document.querySelectorAll(parentsSelector)[0]
+
+        let p1 = document.createElement('p')
+        p1.id = 'p1'
+        p1.style = 'margin:10px 0px 0px 0px; border-left:6px solid #38a3fd; font-size:14px; border-radius:  4px !important;box-shadow: rgb(151, 151, 151) 0px 0px 0px 0px inset; /*inset 0px 0px 15px 3px #979797;*/ background:#10141f; color:chocolate; padding:0px 0px 0px 0px;word-break:break-all;border-radius:0px 0px 0px 0px'
+
+        let p2 = document.createElement('p')
+        p2.style = 'padding-left:6px;font-weight:inherit; padding:6px; word-break:break-all;font-size:inherit;border-radius:0px'
+        p2.id = 'p2'
+
+
+        p1.appendChild(p2)
+        parentElement.insertBefore(p1, parentElement.childNodes[2])
+
+        let span = document.createElement('span')
+        span.style = 'font-weight:bolder;font-size:medium;color:bisque;'
+        span.textContent = textContent
+        p2.appendChild(span)
+
+        function aAdd2Parent(siteName, url, codeSlect) {
+            let a = document.createElement('a')
+            let lable = document.createElement('label')
+            lable.style = 'font-weight:inherit;display:inline-block;max-width:100%;margin-right:10px;'
+            a.href = url + codeSlect
+            a.textContent = siteName
+            a.target = '_blank'
+            a.style = 'color:inherit;/*text-decoration:revert !important;*/ font-weight:inherit'
+            lable.appendChild(a)
+            p2.appendChild(lable)
+        }
+
+        aAdd2Parent('MissAV[720P]', 'https://missav.com/search', '/' + code)
+        aAdd2Parent('Jable[HD]', 'https://jable.tv/search', '/' + code + '/')
+        aAdd2Parent('Supjav[ultraHD]', 'https://supjav.com/?s=', code)
+        aAdd2Parent('番号搜索[聚合]', 'https://limbopro.com/btsearch.html#gsc.tab=0&gsc.q=', code + "&gsc.sort=")
+        aAdd2Parent('谷歌搜索🔍', 'https://www.google.com/search?q=', code)
+        aAdd2Parent('Javbus📖', 'https://www.javbus.com/search/', code + '&type=&parent=ce')
+        console.log('已生成在线预览链接🔗')
+    }
+    otherSearch()
 }
