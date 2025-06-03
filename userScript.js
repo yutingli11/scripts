@@ -287,13 +287,13 @@ function adsDomain_switch(x) { // 匹配参数值 执行相应函数
 adsDomain_switch(values())
 
 // Cloudflare recaptcha 绕过
-function cloudflare_captchaBypass() {
-    var title = document.title;
-    if (title.search("Cloudflare") >= 0 || title.search("Attention") >= 0) {
-        window.location.reload();
-        console.log("captchaBypass done;")
-    };
-}
+// function cloudflare_captchaBypass() {
+//     var title = document.title;
+//     if (title.search("Cloudflare") >= 0 || title.search("Attention") >= 0) {
+//         window.location.reload();
+//         console.log("captchaBypass done;")
+//     };
+// }
 
 function ele_dynamicAppend(selector, attribute, txt, style, func, id, array, tag) {
     let new_ele = document.createElement(tag);
